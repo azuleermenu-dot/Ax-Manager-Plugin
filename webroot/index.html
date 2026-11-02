@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#10151b"><title>AX CODM Garena Optimizer</title>
+<style>
+:root{color-scheme:dark;--bg:#0c1117;--panel:#151d26;--line:#293744;--muted:#9aabba;--text:#edf4f7;--green:#a7f36b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 85% -10%,#253c2b 0,transparent 38%),var(--bg);color:var(--text);font:15px system-ui;padding:calc(18px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}main{max-width:760px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center}.brand{font-weight:900;letter-spacing:.1em;font-size:12px;color:var(--green)}h1{font-size:25px;margin:10px 0 4px}.sub,.muted{color:var(--muted)}.sub{font-size:13px}.pill{border:1px solid #38513a;color:var(--green);border-radius:99px;padding:6px 10px;font-size:11px}.hero{background:linear-gradient(135deg,#1c2a24,#17212b);border:1px solid #34473a;border-radius:18px;padding:18px;margin:20px 0}.hero strong{display:block;margin-bottom:5px}.hero p{margin:0;color:#b7c6c1;font-size:13px;line-height:1.5}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}.label{font-size:11px;color:var(--muted);letter-spacing:.08em}.value{font-size:19px;font-weight:800;margin-top:7px;overflow-wrap:anywhere}.small{font-size:12px;color:var(--muted);margin-top:4px}h2{font-size:16px;margin:22px 0 10px}.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.btn{border:1px solid #405345;background:#1b2b22;color:var(--green);border-radius:11px;padding:13px 9px;font-weight:750}.btn.secondary{background:var(--panel);border-color:var(--line);color:var(--text)}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#090e13;border:1px solid var(--line);border-radius:11px;padding:12px;color:#c5d5df;font:12px monospace;min-height:60px}.notice,.foot{font-size:12px;color:var(--muted);line-height:1.55}.foot{border-top:1px solid var(--line);margin-top:20px;padding-top:12px}@media(min-width:600px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style></head><body><main>
+<div class="top"><div class="brand">AX / PERFORMANCE INTELLIGENCE</div><span class="pill" id="status">CONNECTING</span></div>
+<h1>CODM Garena Optimizer</h1><div class="sub">vivo Y76 5G · Android 13 focused diagnostics</div>
+<section class="hero"><strong id="deviceTitle">Device not scanned</strong><p id="deviceDesc">Connect to AxManager to read actual device information. This foundation build is read-only.</p></section>
+<h2>Device snapshot</h2><div class="grid">
+<div class="card"><div class="label">CPU cores</div><div class="value" id="cores">—</div><div class="small">Detected processors</div></div>
+<div class="card"><div class="label">RAM available</div><div class="value" id="ram">—</div><div class="small" id="ramTotal">Total: —</div></div>
+<div class="card"><div class="label">Battery</div><div class="value" id="battery">—</div><div class="small" id="batteryTemp">Temperature: —</div></div>
+<div class="card"><div class="label">CODM Garena</div><div class="value" id="codm">Unknown</div><div class="small">com.garena.game.codm</div></div></div>
+<h2>Diagnostics</h2><div class="actions">
+<button class="btn" onclick="scan()">Scan device</button><button class="btn secondary" onclick="check('codm')">Check CODM</button>
+<button class="btn secondary" onclick="check('thermal')">Thermal zones</button><button class="btn secondary" onclick="check('network')">Network details</button>
+<button class="btn secondary" onclick="check('game-modes')">Supported game modes</button></div>
+<h2>Diagnostic output</h2><pre id="output">Waiting for AxManager…</pre>
+<p class="notice">Read-only release: no CPU/GPU frequency changes, process killing, thermal-limit changes, CODM file modifications or claimed FPS boosts. Android Game Mode is inspected only; applying it is deferred until safe rollback is verified on this firmware.</p>
+<div class="foot">AX CODM GARENA OPTIMIZER · v0.1.0 · AxManager server 30000+</div></main>
+<script>
+let moduleDir="";const $=id=>document.getElementById(id);
+function status(s){$("status").textContent=s}
+function exec(command,done){
+ if(!window.ksu||typeof ksu.exec!=="function"){$("output").textContent="AxManager ksu API is unavailable. Open this page using AxManager Plugins > Open.";status("API UNAVAILABLE");return}
+ const cb="axcb_"+Date.now()+"_"+Math.floor(Math.random()*9999);
+ window[cb]=(errno,stdout,stderr)=>{delete window[cb];done(errno||0,stdout||"",stderr||"")};
+ try{ksu.exec(command,{cwd:moduleDir},cb)}catch(e){delete window[cb];done(1,"",String(e))}
+}
+function parse(s){const o={};s.split(/\r?\n/).forEach(l=>{const i=l.indexOf("=");if(i>0)o[l.slice(0,i)]=l.slice(i+1)});return o}
+function mb(v){const n=Number(v);return Number.isFinite(n)?Math.round(n/1024)+" MB":"—"}
+function scan(){status("SCANNING");exec("sh ./engine.sh snapshot",(c,out,err)=>{if(c){status("ERROR");$("output").textContent=err||out;return}
+ const d=parse(out);$("deviceTitle").textContent=[d.manufacturer,d.model].filter(Boolean).join(" ")||"Android device";
+ $("deviceDesc").textContent="Android "+(d.android||"?")+" · SDK "+(d.sdk||"?")+" · "+(d.abi||"?")+" · Kernel "+(d.kernel||"?");
+ $("cores").textContent=d.cores||"—";$("ram").textContent=mb(d.ram_available_kb);$("ramTotal").textContent="Total: "+mb(d.ram_total_kb);
+ $("battery").textContent=d.battery?d.battery+"%":"—";$("batteryTemp").textContent=d.battery_temp_tenths?"Temperature: "+(Number(d.battery_temp_tenths)/10).toFixed(1)+" °C":"Temperature unavailable";
+ $("output").textContent=out;status("CONNECTED");check("codm",true)})}
+function check(a,quiet=false){if(!quiet)status("CHECKING");exec("sh ./engine.sh "+a,(c,out,err)=>{$("output").textContent=(out||"")+(err?"\n"+err:"");if(a==="codm")$("codm").textContent=out.includes("installed=true")?"Installed":out.includes("installed=false")?"Not installed":"Unknown";if(!quiet)status(c?"CHECK FAILED":"CONNECTED")})}
+try{if(!window.ksu||typeof ksu.moduleInfo!=="function")throw Error("Open this page from AxManager's Plugins > Open.");const info=JSON.parse(ksu.moduleInfo());moduleDir=info.moduleDir||"";if(!moduleDir)throw Error("AxManager did not provide moduleDir.");$("deviceTitle").textContent=info.name||"AX CODM Optimizer";status("READY");scan()}catch(e){status("INIT ERROR");$("output").textContent=String(e)}
+</script></body></html>
