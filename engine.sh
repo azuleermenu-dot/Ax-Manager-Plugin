@@ -1,21 +1,40 @@
 #!/system/bin/sh
-# AX CODM diagnostics engine. Read-only; no system settings or game files are changed.
-ACTION=$1
+# AX CODM tools. Android shell compatible, no root required for supported platform actions.
+ACTION="$1"
 [ -n "$ACTION" ] || ACTION=snapshot
+PACKAGE="com.garena.game.codm"
+
 prop() { getprop "$1" 2>/dev/null | head -n 1; }
 first_prop() {
-  for key in "$@"; do value=$(prop "$key"); if [ -n "$value" ]; then echo "$value"; return; fi; done
+  for key in "$@"; do
+    value=$(prop "$key")
+    if [ -n "$value" ]; then echo "$value"; return; fi
+  done
 }
-soc_value() { first_prop ro.soc.model ro.vendor.soc.model ro.board.platform ro.mediatek.platform ro.hardware; }
+soc_value() {
+  value=$(first_prop ro.soc.model ro.vendor.soc.model ro.board.platform ro.mediatek.platform ro.hardware)
+  case "$value" in
+    *mt6833*|*MT6833*) echo "MediaTek Dimensity 700 (MT6833)" ;;
+    *) [ -n "$value" ] && echo "$value" || echo unavailable ;;
+  esac
+}
 gpu_value() {
   value=$(first_prop ro.hardware.egl)
   renderer=$(dumpsys SurfaceFlinger 2>/dev/null | grep -i -m 1 'GLES:' | sed 's/^[[:space:]]*//')
-  [ -n "$renderer" ] && value=$renderer
-  [ -n "$value" ] && echo "$value" || echo unavailable
+  [ -n "$renderer" ] && value="$renderer"
+  if [ -n "$value" ]; then
+    echo "$value"
+  else
+    platform=$(first_prop ro.board.platform ro.mediatek.platform)
+    case "$platform" in *mt6833*|*MT6833*) echo "Mali-G57 MC2 (platform specification)" ;; *) echo unavailable ;; esac
+  fi
+}
+require_codm() {
+  pm path "$PACKAGE" >/dev/null 2>&1 || { echo "ERROR: CODM Garena package is not installed ($PACKAGE)."; exit 2; }
 }
 codm_state() {
-  if pm path com.garena.game.codm >/dev/null 2>&1; then echo "codm_installed=true"; else echo "codm_installed=false"; fi
-  pid=$(pidof com.garena.game.codm 2>/dev/null | awk '{print $1}')
+  if pm path "$PACKAGE" >/dev/null 2>&1; then echo "codm_installed=true"; else echo "codm_installed=false"; fi
+  pid=$(pidof "$PACKAGE" 2>/dev/null | awk '{print $1}')
   if [ -n "$pid" ]; then echo "codm_running=true"; echo "codm_pid=$pid"; else echo "codm_running=false"; echo "codm_pid=unavailable"; fi
 }
 cpu_freqs() {
@@ -25,11 +44,15 @@ cpu_freqs() {
     echo "$core"_khz="$(cat "$f" 2>/dev/null)"
   done
 }
-cpu_ticks() { awk '/^cpu / {total=$2+$3+$4+$5+$6+$7+$8; idle=$5+$6; print total, idle; exit}' /proc/stat 2>/dev/null; }
+cpu_ticks() {
+  awk '/^cpu / {total=$2+$3+$4+$5+$6+$7+$8; idle=$5+$6; print total, idle; exit}' /proc/stat 2>/dev/null
+}
 case "$ACTION" in
 snapshot)
-  echo "model=$(prop ro.product.model)"
-  echo "manufacturer=$(prop ro.product.manufacturer)"
+  model=$(prop ro.product.model)
+  manufacturer=$(prop ro.product.manufacturer)
+  echo "model=$model"
+  echo "manufacturer=$manufacturer"
   echo "device=$(prop ro.product.device)"
   echo "android=$(prop ro.build.version.release)"
   echo "sdk=$(prop ro.build.version.sdk)"
@@ -42,10 +65,9 @@ snapshot)
   awk '/MemTotal:/ {print "ram_total_kb=" $2} /MemAvailable:/ {print "ram_available_kb=" $2}' /proc/meminfo 2>/dev/null
   echo "battery=$(dumpsys battery 2>/dev/null | awk -F': ' '/level:/{print $2; exit}')"
   echo "battery_temp_tenths=$(dumpsys battery 2>/dev/null | awk -F': ' '/temperature:/{print $2; exit}')"
-  echo "uid=$(id -u 2>/dev/null)"
-  echo "selinux=$(id -Z 2>/dev/null)"
-  echo "axeron_version=$AXERONVER"
   df -k /data 2>/dev/null | tail -n 1 | awk '{print "data_total_kb=" $2; print "data_used_kb=" $3; print "data_free_kb=" $4}'
+  echo "uid=$(id -u 2>/dev/null)"
+  echo "axeron_version=$AXERONVER"
   codm_state
   ;;
 hardware)
@@ -60,7 +82,14 @@ monitor)
   sleep 1
   set -- $(cpu_ticks); after_total=$1; after_idle=$2
   delta_total=$((after_total-before_total)); delta_idle=$((after_idle-before_idle))
-  if [ "$delta_total" -gt 0 ]; then echo "cpu_load_percent=$(( (delta_total-delta_idle)*100/delta_total ))"; else echo "cpu_load_percent=unavailable"; fi
+  if [ "$delta_total" -gt 0 ]; then
+    load=$(( (delta_total-delta_idle)*100/delta_total ))
+    [ "$load" -lt 0 ] && load=0
+    [ "$load" -gt 100 ] && load=100
+    echo "cpu_load_percent=$load"
+  else
+    echo "cpu_load_percent=unavailable"
+  fi
   cpu_freqs
   for f in /sys/class/devfreq/*gpu*/cur_freq /sys/class/devfreq/*mali*/cur_freq /sys/class/misc/mali0/device/devfreq/*/cur_freq; do
     [ -r "$f" ] || continue
@@ -72,15 +101,37 @@ monitor)
 codm)
   codm_state
   ;;
+game-modes)
+  require_codm
+  echo "package=$PACKAGE"
+  cmd game list-modes "$PACKAGE" 2>&1
+  ;;
+game-mode)
+  require_codm
+  MODE="$2"
+  case "$MODE" in performance|standard|battery) ;; *) echo "ERROR: mode must be performance, standard, or battery."; exit 2 ;; esac
+  echo "package=$PACKAGE"
+  echo "requested_mode=$MODE"
+  cmd game mode "$MODE" "$PACKAGE" 2>&1
+  result=$?
+  if [ "$result" -eq 0 ]; then echo "result=command_accepted"; else echo "result=command_failed"; fi
+  exit "$result"
+  ;;
+launch-codm)
+  require_codm
+  monkey -p "$PACKAGE" 1 2>&1
+  ;;
 thermal)
   found=0
   for f in /sys/class/thermal/thermal_zone*/temp; do
     [ -r "$f" ] || continue
     z=$(echo "$f" | sed 's#/temp##')
-    t=$(cat "$z/type" 2>/dev/null); v=$(cat "$f" 2>/dev/null)
+    t=$(cat "$z/type" 2>/dev/null)
+    v=$(cat "$f" 2>/dev/null)
     [ -n "$v" ] || continue
     name=$(echo "$z" | sed 's#.*/##')
-    echo "zone_"$name"=$t,$v"; found=1
+    echo "zone_$name=${t:-unknown},$v"
+    found=1
   done
   [ "$found" -eq 1 ] || echo "thermal=unavailable"
   ;;
@@ -90,32 +141,8 @@ network)
   echo "routes:"
   ip route 2>/dev/null | head -n 5
   ;;
-game-modes)
-  pm path com.garena.game.codm >/dev/null 2>&1 || { echo "CODM Garena is not installed."; exit 2; }
-  cmd game list-modes com.garena.game.codm 2>&1
-  ;;
-game-performance)
-  pm path com.garena.game.codm >/dev/null 2>&1 || { echo "CODM Garena is not installed."; exit 2; }
-  echo "Requesting Android PERFORMANCE Game Mode for CODM Garena..."
-  cmd game mode performance com.garena.game.codm 2>&1
-  result=$?
-  if [ "$result" -eq 0 ]; then echo "result=performance_requested"; else echo "result=unsupported_or_denied"; fi
-  exit "$result"
-  ;;
-game-standard)
-  pm path com.garena.game.codm >/dev/null 2>&1 || { echo "CODM Garena is not installed."; exit 2; }
-  echo "Restoring Android STANDARD Game Mode for CODM Garena..."
-  cmd game mode standard com.garena.game.codm 2>&1
-  result=$?
-  if [ "$result" -eq 0 ]; then echo "result=standard_requested"; else echo "result=unsupported_or_denied"; fi
-  exit "$result"
-  ;;
-launch-codm)
-  pm path com.garena.game.codm >/dev/null 2>&1 || { echo "CODM Garena is not installed."; exit 2; }
-  monkey -p com.garena.game.codm 1 2>&1
-  ;;
 *)
-  echo "Usage: engine.sh {snapshot|hardware|monitor|codm|thermal|network|game-modes}"
+  echo "Usage: engine.sh {snapshot|hardware|monitor|codm|game-modes|game-mode <performance|standard|battery>|launch-codm|thermal|network}"
   exit 2
   ;;
 esac
