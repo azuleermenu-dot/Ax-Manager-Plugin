@@ -35,9 +35,9 @@ function status(s){$("status").textContent=s}
 function shellQuote(value){return "'"+String(value).replace(/'/g,"'\\''")+"'";}
 function run(command,done){
  if(!window.ksu||typeof ksu.exec!=="function"){status("API UNAVAILABLE");$("output").textContent="Open this page using AxManager Plugins > Open.";return}
- const match=command.match(/^sh \.\/engine\.sh(?:\\s+(.+))?$/);
+ const match=command.match(/^sh \.\/engine\.sh(?:\s+(.+))?$/);
  if(match){
-  const args=(match[1]||"").trim().split(/\\s+/).filter(Boolean);
+  const args=(match[1]||"").trim().split(/\s+/).filter(Boolean);
   command="sh "+shellQuote(moduleDir+"/engine.sh")+(args.length?" "+args.map(shellQuote).join(" "):"");
  }
  const cb="axcb_"+Date.now()+"_"+Math.floor(Math.random()*9999);
@@ -76,7 +76,7 @@ function refreshAll(){status("REFRESHING");snapshot();setTimeout(monitor,300)}
 function check(action){
  status("RUNNING "+action.toUpperCase());
  run("sh ./engine.sh "+action,(c,out,err)=>{
-  $("output").textContent=(out||"")+(err?"\\n"+err:"");
+  $("output").textContent=(out||"")+(err?"\n"+err:"");
   if(action==="codm")codm(parse(out));
   status(c?"COMMAND FAILED":"COMMAND FINISHED");
  });
@@ -84,7 +84,7 @@ function check(action){
 function gameMode(mode){
  status("REQUESTING "+mode.toUpperCase());
  run("sh ./engine.sh game-mode "+mode,(c,out,err)=>{
-  $("output").textContent=(out||"")+(err?"\\n"+err:"");
+  $("output").textContent=(out||"")+(err?"\n"+err:"");
   status(c?"MODE REJECTED":"COMMAND ACCEPTED");
  });
 }
@@ -96,7 +96,7 @@ for(let depth=0;depth<3&&rawDir&&typeof rawDir==="object";depth++){
 }
 if(typeof rawDir==="string"){
  moduleDir=rawDir.trim();
- const match=moduleDir.match(/(?:^|[{,])\\s*path\\s*:\\s*['"]?([^,'"}]+)/);
+ const match=moduleDir.match(/(?:^|[{,])\s*path\s*:\s*['"]?([^,'"}]+)/);
  if(match)moduleDir=match[1].trim();
 }
 moduleDir=moduleDir.replace(/^file:\/\//,"").replace(/\\/$/,"");
