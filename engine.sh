@@ -94,6 +94,26 @@ game-modes)
   pm path com.garena.game.codm >/dev/null 2>&1 || { echo "CODM Garena is not installed."; exit 2; }
   cmd game list-modes com.garena.game.codm 2>&1
   ;;
+game-performance)
+  pm path com.garena.game.codm >/dev/null 2>&1 || { echo "CODM Garena is not installed."; exit 2; }
+  echo "Requesting Android PERFORMANCE Game Mode for CODM Garena..."
+  cmd game mode performance com.garena.game.codm 2>&1
+  result=$?
+  if [ "$result" -eq 0 ]; then echo "result=performance_requested"; else echo "result=unsupported_or_denied"; fi
+  exit "$result"
+  ;;
+game-standard)
+  pm path com.garena.game.codm >/dev/null 2>&1 || { echo "CODM Garena is not installed."; exit 2; }
+  echo "Restoring Android STANDARD Game Mode for CODM Garena..."
+  cmd game mode standard com.garena.game.codm 2>&1
+  result=$?
+  if [ "$result" -eq 0 ]; then echo "result=standard_requested"; else echo "result=unsupported_or_denied"; fi
+  exit "$result"
+  ;;
+launch-codm)
+  pm path com.garena.game.codm >/dev/null 2>&1 || { echo "CODM Garena is not installed."; exit 2; }
+  monkey -p com.garena.game.codm 1 2>&1
+  ;;
 *)
   echo "Usage: engine.sh {snapshot|hardware|monitor|codm|thermal|network|game-modes}"
   exit 2
