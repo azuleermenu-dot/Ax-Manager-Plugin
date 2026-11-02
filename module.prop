@@ -1,7 +1,7 @@
 id=ax.codm.garena.optimizer
 name=AX CODM Garena Optimizer
-version=0.5.0
-versionCode=6
+version=0.6.0
+versionCode=7
 author=Azuleer Menu
-description=CODM FPS graphics guide and Android diagnostics
+description=CODM Potato Graphics guide and Android diagnostics
 axeronPlugin=30000
