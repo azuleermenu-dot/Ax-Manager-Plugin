@@ -68,12 +68,12 @@ function check(action){
  run("sh ./engine.sh "+action,(c,out,err)=>{$("output").textContent=(out||"")+(err?"\n"+err:"");if(action==="codm")codm(parse(out));status(c?"CHECK FAILED":"CONNECTED")});
 }
 try{if(!window.ksu||typeof ksu.moduleInfo!=="function")throw Error("Open this page from AxManager Plugins > Open.");const info=JSON.parse(ksu.moduleInfo());
-const rawDir=info.moduleDir;
-if(typeof rawDir==="string")moduleDir=rawDir;
-else if(rawDir&&typeof rawDir==="object"){
- const candidate=rawDir.path||rawDir.absolutePath||rawDir.moduleDir||rawDir.uri;
- if(typeof candidate==="string")moduleDir=candidate;
+let rawDir=info.moduleDir;
+for(let depth=0;depth<3&&rawDir&&typeof rawDir==="object";depth++){
+ rawDir=rawDir.path||rawDir.absolutePath||rawDir.moduleDir||rawDir.uri||rawDir.value;
 }
+if(typeof rawDir==="string")moduleDir=rawDir;
+moduleDir=moduleDir.replace(/^file:\/\//,"");
 if(moduleDir&&!moduleDir.startsWith("/"))moduleDir="/"+moduleDir;
 if(!moduleDir)throw Error("AxManager did not provide a usable moduleDir path.");show("deviceTitle",info.name||"AX CODM Optimizer");status("READY");refreshAll()}catch(e){status("INIT ERROR");$("output").textContent=String(e)}
 </script></body></html>
