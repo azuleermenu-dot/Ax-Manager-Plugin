@@ -1,6 +1,6 @@
 # AX CODM Garena Optimizer
 
-Version 0.2.1 · AxManager server 30000+ · Android shell/plugin environment.
+Version 0.3.0 · AxManager server 30000+ · Android shell/plugin environment.
 
 A read-only diagnostics foundation intended for testing on the vivo Y76 5G (V2124, Android 13). Hardware is identified at runtime; this release does not assume root access or hardcode a GPU/SoC result.
 
@@ -36,10 +36,16 @@ Open the WebUI from AxManager. The ksu API is expected only in the plugin WebUI 
 ## Compatibility and limitations
 The target is AxManager server 30000+ and Android shell UID 2000. Access to procfs, sysfs, dumpsys, pidof, ip and cmd game varies by Android build and shell permissions. GPU identity, CPU frequency and thermal values are shown only when exposed by the device. An unavailable value is not guessed or fabricated. A one-second CPU sample is a brief snapshot, not a sustained benchmark.
 
-## 0.2.1 hotfix
+## 0.3.0 CODM controls
 - Resolves AxManager moduleDir values provided as either a string or an object containing a path.
 - Normalizes relative module paths before passing them as the WebUI command working directory.
 - Fixes a WebUI initialization expression so telemetry controls can initialize correctly.
+
+## CODM controls
+- Request Android Game Mode PERFORMANCE for `com.garena.game.codm`, only when the platform supports it.
+- Restore Android Game Mode STANDARD.
+- Launch CODM Garena through Android's package launcher.
+- These are opt-in actions; performance mode may increase battery use and does not guarantee FPS gains. No CPU/GPU tuning, thermal override, game-file changes or network manipulation is performed.
 
 ## Test status
 Shell syntax and ZIP integrity are statically checked. This version has not been installed or device-tested on the vivo Y76 5G. WebView callback behavior, hardware visibility and CODM process detection still require confirmation on the target device.
