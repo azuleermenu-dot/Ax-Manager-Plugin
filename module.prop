@@ -1,7 +1,7 @@
 id=ax.codm.garena.optimizer
 name=AX CODM Garena Optimizer
-version=0.3.0
-versionCode=4
+version=0.4.0
+versionCode=5
 author=Azuleer Menu
 description=Read-only hardware and CODM diagnostics for Android
 axeronPlugin=30000
