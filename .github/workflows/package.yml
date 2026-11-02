@@ -1,0 +1,33 @@
+name: Build AxManager plugin ZIP
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell scripts
+        run: |
+          sh -n customize.sh
+          sh -n service.sh
+          sh -n action.sh
+          sh -n uninstall.sh
+          sh -n engine.sh
+      - name: Package plugin
+        run: |
+          mkdir -p dist
+          zip -r dist/AX-CODM-GARENA-OPTIMIZER-v0.4.0.zip \
+            module.prop customize.sh service.sh action.sh uninstall.sh engine.sh README.md webroot
+          unzip -t dist/AX-CODM-GARENA-OPTIMIZER-v0.4.0.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AX-CODM-GARENA-OPTIMIZER-v0.4.0
+          path: dist/AX-CODM-GARENA-OPTIMIZER-v0.4.0.zip
+          if-no-files-found: error
