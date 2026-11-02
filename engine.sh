@@ -8,7 +8,7 @@ first_prop() {
 }
 soc_value() { first_prop ro.soc.model ro.vendor.soc.model ro.board.platform ro.mediatek.platform ro.hardware; }
 gpu_value() {
-  value=$(first_prop ro.hardware.egl ro.opengles.version)
+  value=$(first_prop ro.hardware.egl)
   renderer=$(dumpsys SurfaceFlinger 2>/dev/null | grep -i -m 1 'GLES:' | sed 's/^[[:space:]]*//')
   [ -n "$renderer" ] && value=$renderer
   [ -n "$value" ] && echo "$value" || echo unavailable
