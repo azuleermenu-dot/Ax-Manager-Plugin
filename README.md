@@ -1,20 +1,23 @@
 # AX CODM Garena Optimizer
 
-Version 0.3.0 · AxManager server 30000+ · Android shell/plugin environment.
+Version 0.4.0 · AxManager server 30000+ · Android shell/plugin environment.
 
-A read-only diagnostics foundation intended for testing on the vivo Y76 5G (V2124, Android 13). Hardware is identified at runtime; this release does not assume root access or hardcode a GPU/SoC result.
+Device-targeted release for vivo Y76 5G (V2124, Android 13). Hardware is detected at runtime; the known target platform is MediaTek Dimensity 700 (MT6833) with Mali-G57 MC2 graphics and a 60 Hz display. Runtime GPU/CPU readings are reported separately from specification-based hints.
 
-## Features
-- Runtime device, Android, ABI, kernel and platform identification.
-- CPU core count, one-second aggregate CPU utilization sample and per-core frequencies when exposed.
-- GPU renderer hint from Android properties / SurfaceFlinger, plus GPU frequency only when a matching sysfs node is readable.
-- RAM availability, battery percentage/temperature and /data free space.
-- CODM Garena package installation and process/PID detection.
-- Readable thermal-zone data, network interface/routes and Android Game Mode listing.
-- Mobile-first AxManager WebUI with manual refresh and diagnostic actions.
+## CODM controls
+- Request Android Game Mode PERFORMANCE for CODM Garena.
+- Restore STANDARD mode.
+- Request BATTERY mode.
+- Read available game-mode support.
+- Launch CODM Garena directly.
 
-## Safety scope
-This release is intentionally read-only. It does not set CPU/GPU frequencies, kill processes, clear caches, disable thermal controls, modify CODM files, manipulate game memory or change network settings. It does not promise FPS or ping improvements. Game Mode is inspected only; applying it is deferred until current-mode detection and rollback are verified on the target firmware.
+These use Android's per-game Game Mode shell command. Whether a requested mode is supported depends on the Android build and the game package. Command acceptance does not promise a frame-rate increase.
+
+## Device monitoring
+- Device / Android / SoC / GPU identification.
+- CPU utilization sample and per-core frequency when readable.
+- RAM, battery, storage and CODM process state.
+- Thermal-zone, network and Game Mode diagnostics.
 
 ## Install
 1. Download the ZIP.
@@ -22,36 +25,16 @@ This release is intentionally read-only. It does not set CPU/GPU frequencies, ki
 3. Re-ignite if requested by AxManager.
 4. Open this plugin from the Plugins list.
 
-Open the WebUI from AxManager. The ksu API is expected only in the plugin WebUI context.
+The WebUI resolves the plugin directory from moduleInfo and invokes the engine by absolute path, rather than relying on a working-directory conversion.
 
-## Project files
-- module.prop: plugin identity and minimum server version.
-- customize.sh: AxManager environment/version validation.
-- engine.sh: read-only shell diagnostics.
-- webroot/index.html: mobile-first AxManager WebUI.
-- service.sh: no resident daemon.
-- action.sh: informational action.
-- uninstall.sh: confirms no Android settings were changed.
-
-## Compatibility and limitations
-The target is AxManager server 30000+ and Android shell UID 2000. Access to procfs, sysfs, dumpsys, pidof, ip and cmd game varies by Android build and shell permissions. GPU identity, CPU frequency and thermal values are shown only when exposed by the device. An unavailable value is not guessed or fabricated. A one-second CPU sample is a brief snapshot, not a sustained benchmark.
-
-## 0.3.0 CODM controls
-- Resolves AxManager moduleDir values provided as either a string or an object containing a path.
-- Normalizes relative module paths before passing them as the WebUI command working directory.
-- Fixes a WebUI initialization expression so telemetry controls can initialize correctly.
-
-## CODM controls
-- Request Android Game Mode PERFORMANCE for `com.garena.game.codm`, only when the platform supports it.
-- Restore Android Game Mode STANDARD.
-- Launch CODM Garena through Android's package launcher.
-- These are opt-in actions; performance mode may increase battery use and does not guarantee FPS gains. No CPU/GPU tuning, thermal override, game-file changes or network manipulation is performed.
+## Scope and limitations
+No CPU/GPU overclocking, undervolting, thermal-limit disabling, memory editing, game-file modification or process killing is performed. Android shell permissions and Funtouch OS may reject some commands or hide telemetry nodes. Unsupported readings are displayed as unavailable. Game Mode PERFORMANCE may increase battery consumption and can be rejected by the firmware or game.
 
 ## Test status
-Shell syntax and ZIP integrity are statically checked. This version has not been installed or device-tested on the vivo Y76 5G. WebView callback behavior, hardware visibility and CODM process detection still require confirmation on the target device.
+Shell syntax, JavaScript syntax and ZIP integrity are statically checked. Installation and actual Game Mode acceptance must still be confirmed on the target vivo device.
 
-## Official AxManager references
-- https://axmanager.app/plugin/what-is-plugin
-- https://axmanager.app/plugin/plugin-installer
-- https://axmanager.app/plugin/webui-api
-- https://axmanager.app/plugin/environment
+## Official references
+- AxManager WebUI API: https://axmanager.app/plugin/webui-api
+- AxManager plugin environment: https://axmanager.app/plugin/environment
+- Android Game Mode API: https://developer.android.com/games/optimize/adpf/gamemode/gamemode-api
+- vivo Y76 5G official specifications: https://www.vivo.com/ph/products/param/y76
