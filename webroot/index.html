@@ -44,7 +44,7 @@ function snapshot(){
   if(c){status("SCAN ERROR");$("output").textContent=err||out;return}
   const d=parse(out);
   show("deviceTitle",[d.manufacturer,d.model].filter(Boolean).join(" ")||"Android device");
-  show("deviceDesc","Android "+(d.android||"?")+" · SDK "+(d.sdk||"?")+" · "+(d.abi||"?")+" · Kernel "+(d.kernel||"?");
+  show("deviceDesc","Android "+(d.android||"?")+" · SDK "+(d.sdk||"?")+" · "+(d.abi||"?")+" · Kernel "+(d.kernel||"?"));
   show("soc",d.soc);show("gpu",d.gpu);show("cpuName",d.cpu||"CPU identity unavailable");show("cpuCores","CPU cores: "+(d.cores||"—"));
   show("ram",mb(d.ram_available_kb));show("ramTotal","Total: "+mb(d.ram_total_kb));
   show("battery",d.battery?d.battery+"%":"—");show("batteryTemp",d.battery_temp_tenths?"Temperature: "+(Number(d.battery_temp_tenths)/10).toFixed(1)+" °C":"Temperature unavailable");
@@ -67,5 +67,13 @@ function check(action){
  status("RUNNING "+action.toUpperCase());
  run("sh ./engine.sh "+action,(c,out,err)=>{$("output").textContent=(out||"")+(err?"\n"+err:"");if(action==="codm")codm(parse(out));status(c?"CHECK FAILED":"CONNECTED")});
 }
-try{if(!window.ksu||typeof ksu.moduleInfo!=="function")throw Error("Open this page from AxManager Plugins > Open.");const info=JSON.parse(ksu.moduleInfo());moduleDir=info.moduleDir||"";if(!moduleDir)throw Error("AxManager did not provide moduleDir.");show("deviceTitle",info.name||"AX CODM Optimizer");status("READY");refreshAll()}catch(e){status("INIT ERROR");$("output").textContent=String(e)}
+try{if(!window.ksu||typeof ksu.moduleInfo!=="function")throw Error("Open this page from AxManager Plugins > Open.");const info=JSON.parse(ksu.moduleInfo());
+const rawDir=info.moduleDir;
+if(typeof rawDir==="string")moduleDir=rawDir;
+else if(rawDir&&typeof rawDir==="object"){
+ const candidate=rawDir.path||rawDir.absolutePath||rawDir.moduleDir||rawDir.uri;
+ if(typeof candidate==="string")moduleDir=candidate;
+}
+if(moduleDir&&!moduleDir.startsWith("/"))moduleDir="/"+moduleDir;
+if(!moduleDir)throw Error("AxManager did not provide a usable moduleDir path.");show("deviceTitle",info.name||"AX CODM Optimizer");status("READY");refreshAll()}catch(e){status("INIT ERROR");$("output").textContent=String(e)}
 </script></body></html>
