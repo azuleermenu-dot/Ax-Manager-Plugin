@@ -23,8 +23,7 @@ jobs:
       - name: Package plugin
         run: |
           mkdir -p dist
-          zip -r dist/AX-CODM-GARENA-OPTIMIZER-v0.6.0.zip \\
-            module.prop customize.sh service.sh action.sh uninstall.sh engine.sh README.md webroot
+          zip -r dist/AX-CODM-GARENA-OPTIMIZER-v0.6.0.zip module.prop customize.sh service.sh action.sh uninstall.sh engine.sh README.md webroot
           unzip -t dist/AX-CODM-GARENA-OPTIMIZER-v0.6.0.zip
       - uses: actions/upload-artifact@v4
         with:
