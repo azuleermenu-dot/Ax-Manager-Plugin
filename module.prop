@@ -1,0 +1,7 @@
+id=ax.codm.garena.optimizer
+name=AX CODM Garena Optimizer
+version=0.1.0
+versionCode=1
+author=Azuleer Menu
+description=Read-only device and CODM diagnostics for vivo Y76 5G
+axeronPlugin=30000
