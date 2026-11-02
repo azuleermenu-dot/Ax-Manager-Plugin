@@ -96,10 +96,10 @@ for(let depth=0;depth<3&&rawDir&&typeof rawDir==="object";depth++){
 }
 if(typeof rawDir==="string"){
  moduleDir=rawDir.trim();
- const match=moduleDir.match(/(?:^|[{,])\s*path\s*:\s*['"]?([^,'"}]+)/);
+ const match=moduleDir.match(/path['"]?\s*:\s*['"]?([^,'"}]+)/);
  if(match)moduleDir=match[1].trim();
 }
-moduleDir=moduleDir.replace(/^file:\/\//,"").replace(/\\/$/,"");
+moduleDir=moduleDir.replace(/^file:\/\//,"").replace(/\/+$/,"");
 if(moduleDir&&!moduleDir.startsWith("/"))moduleDir="/"+moduleDir;
 if(!moduleDir)throw Error("AxManager did not provide a usable moduleDir path.");show("deviceTitle",info.name||"AX CODM Optimizer");status("READY");refreshAll()}catch(e){status("INIT ERROR");$("output").textContent=String(e)}
 </script></body></html>
